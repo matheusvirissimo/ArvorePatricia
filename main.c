@@ -10,3 +10,10 @@ typedef struct noPatricia{
     struct noPatricia *dir; // subárvore da direita
 } NOPATRICIA; 
 
+void inicializaArvore(NOPATRICIA **arvore){
+    *arvore = (NOPATRICIA*) malloc(sizeof(NOPATRICIA));
+    (*arvore)->chave = UINT_MAX; /* Maximum value an `unsigned int' can hold.  (Minimum is 0).  */
+    (*arvore)->esq = (*arvore)->dir = *arvore;
+    (*arvore)->bit = -1;
+}
+
