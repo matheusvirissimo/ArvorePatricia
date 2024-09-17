@@ -1,7 +1,7 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
+#include <limits.h> // usado para o UINT_MAX
 #include <stdbool.h>
 
 #define bits_na_chave 32 // quantidade de bits disponíveis por chave
@@ -28,7 +28,33 @@ unsigned bit(unsigned chave, int k){
 }
 
 // Inserção - inserir uma nova chave na árvore
+NOPATRICIA* insereArvorePatricia(NOPATRICIA *arvore, unsigned chave, int w, NOPATRICIA *pai){
+    NOPATRICIA *novo;
 
+    if((arvore->bit) >= w || (arvore->bit <= pai->bit)){
+        novo = (NOPATRICIA*) malloc(sizeof(NOPATRICIA));
+        novo->chave = chave;
+        novo->bit = w;
+
+        if(bit(chave, novo->bit) == 1){ // bit a ser analisado é 1, ou seja, vai para a direita
+            novo->esq = arvore; // o lado direito vai apontar para o resto da árvore
+            novo->dir = novo; // o lado direito vai apontar para si mesmo, meio que em "loop"
+        }else{ // o bit é 0
+            novo->esq = novo; // vai apontar para si mesmo
+            novo->dir = arvore; // aponta para o resto da árvore
+        }
+
+        return novo;
+    }
+
+    if(bit(chave, arvore->bit) == 0){
+        arvore->esq = insereArvorePatricia(arvore->esq, chave, w, arvore);
+    }else{
+        arvore->dir = insereArvorePatricia(arvore->dir, chave, w, arvore);
+    }
+    
+    return arvore;
+}
 
 // Remoção - Remover uma chave existente da árvore
 
