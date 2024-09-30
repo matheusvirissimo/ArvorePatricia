@@ -72,16 +72,91 @@ void insere(No **arvore, unsigned chave) {
     }
 }
 
+
+No *busca_com_pai(No *arvore, unsigned chave, No **pai) {
+    No *anterior = NULL;
+    No *atual = arvore->esq;  // Começa pela raiz (arvore->esq)
+    int w = -1;
+
+    while (atual->bit > w) {
+        anterior = atual;
+        w = atual->bit;
+        if (bit(chave, atual->bit) == 0)
+            atual = atual->esq;
+        else
+            atual = atual->dir;
+    }
+
+    *pai = anterior;  // Retorna o nó pai
+    return atual;     // Retorna o nó encontrado
+}
+
+
+
+
+
+
+
+void deleta(No **arvore, unsigned chave) {
+    No *pai = NULL;
+    No *t = busca_com_pai(*arvore, chave, &pai);  // Busca o nó e seu pai
+
+    if (t == NULL || t->chave != chave) {
+        printf("Chave %u não encontrada na árvore.\n", chave);
+        return;  // Não encontrou a chave
+    }
+
+    // Se o nó encontrado é o único nó na árvore
+    if (t == *arvore) {
+        printf("Chave %u removida. A árvore agora está vazia.\n", chave);
+        inicializa(arvore);  // Reinicializa a árvore
+        return;
+    }
+
+    // Achar o nó substituto para eliminar t
+    No *substituto = NULL;
+    if (bit(t->chave, pai->bit) == 0)
+        substituto = pai->dir;  // O substituto será o filho que não estamos removendo
+    else
+        substituto = pai->esq;
+
+    // Conecta o pai ao substituto
+    if (pai->esq == t)
+        pai->esq = substituto;
+    else
+        pai->dir = substituto;
+
+    // Libera o nó deletado
+    free(t);
+
+    printf("Chave %u removida da árvore.\n", chave);
+}
+
+
+// Função auxiliar para converter um número inteiro para uma string binária
+void int_para_binario(unsigned n, char *bin_str) {
+    int i;
+    for (i = sizeof(unsigned) * 8 - 1; i >= 0; i--) {
+        bin_str[sizeof(unsigned) * 8 - 1 - i] = (n & (1u << i)) ? '1' : '0';
+    }
+    bin_str[sizeof(unsigned) * 8] = '\0'; // Adiciona o terminador de string
+}
+
 // Função para imprimir a árvore (em pré-ordem) para facilitar o teste
 void imprime_arvore(No *arvore) {
     if (arvore != NULL && arvore->chave != UINT_MAX) {
-        printf("Chave: %u, Bit: %d\n", arvore->chave, arvore->bit);
+        char bin_str[sizeof(unsigned) * 8 + 1];  // Buffer para a string binária
+        int_para_binario(arvore->chave, bin_str); // Converte a chave para binário
+        printf("Chave: %u (%s), Bit: %d\n", arvore->chave, bin_str, arvore->bit);
         if (arvore->esq != arvore)
             imprime_arvore(arvore->esq);
         if (arvore->dir != arvore)
             imprime_arvore(arvore->dir);
     }
 }
+
+
+
 
 int main() {
     No *arvore;
@@ -95,7 +170,8 @@ int main() {
         printf("1. Inserir um número\n");
         printf("2. Buscar um número\n");
         printf("3. Imprimir a árvore\n");
-        printf("4. Sair\n");
+        printf("4. Deletar um número\n");
+        printf("5. Sair\n");
         printf("Opção: ");
         scanf("%d", &opcao);
 
@@ -122,9 +198,15 @@ int main() {
                 break;
 
             case 4:
+                printf("Digite o número a ser deletado: ");
+                scanf("%u", &numero);
+                deleta(&arvore, numero);
+                break;
+
+            case 5:
                 printf("Saindo...\n");
                 return 0;
-            
+
             default:
                 printf("Opção inválida! Tente novamente.\n");
         }
