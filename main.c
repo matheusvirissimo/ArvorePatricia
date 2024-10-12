@@ -5,62 +5,87 @@
 // Definição do nó da árvore Patricia
 typedef struct No {
     char *chave;  // A chave agora é uma string binária
-    int bit;
-    struct No *esq, *dir;
-} No;
+    int bit; // posição do bit que discrimina o nó, isso é, para qual lado ele vai seguir
+    struct No *esq; // nó da esquerda - quando o bit for 1
+    struct No *dir; // nó da direita - quando o bit for 0
+} NOPATRICIA;
 
 // Função para inicializar a árvore
-void inicializa(No **arvore) {
-    printf("Inicializando a árvore...\n"); // Verifica se a inicialização ocorre
-    *arvore = malloc(sizeof(No));
-    if (*arvore == NULL) {
-        printf("Falha ao alocar memória para a árvore.\n");
-        exit(1);  // Sai do programa se não puder alocar memória
+void inicializa(NOPATRICIA **arvore){
+
+    printf("Inicializando a arvore...\n"); // Verifica se a inicialização ocorre
+    *arvore = malloc(sizeof(NOPATRICIA)); // vamos criar um nó dummy = ele tem um valor que não é possível alcançar
+
+    if(*arvore == NULL){ // deu algum problema e o nó não existe (?)
+        printf("Falha ao alocar memoria para a arvore.\n");
+        exit(1);  // Sai do programa se não puder alocar memória - mesma coisa que um return
     }
-    (*arvore)->chave = NULL;  // Chave NULL para o nó sentinela
-    (*arvore)->esq = (*arvore)->dir = *arvore;
-    (*arvore)->bit = -1;
-    printf("Árvore inicializada com sucesso.\n");
+    (*arvore)->chave = NULL; // tem que ser nulo e não mais UNIT_MAX pois estamos trabalhando com char agora
+    (*arvore)->esq = (*arvore)->dir = *arvore; // o nó aponta para sí mesmo tanto na esquerda quanto na direita
+    (*arvore)->bit = -1; // como é a posição que discrimina o nó
+
+    printf("Arvore inicializada com sucesso.\n"); // criamos o nó dummy
 }
 
 // Função auxiliar para obter o valor de um bit em uma string binária
-int bit(const char *chave, int n) {
+int bit(const char *chave, int n){
     if (n >= strlen(chave)) {
-        return 0;  // Se n ultrapassar o tamanho da string, considera 0
+        return 0;  // Se [n] ultrapassar o tamanho da string, considera 0
     }
-    return chave[n] == '1' ? 1 : 0;
+
+    // Se o bit na posição [n] da chave for 1, retorna 1, do contrário, retorna 0
+    return chave[n] == '1' ? 1 : 0; 
 }
 
 // Função de busca recursiva
-No *busca_rec(No *arvore, const char *x, int w) {
-    if (arvore->bit <= w)
+NOPATRICIA *busca_rec(NOPATRICIA *arvore, const char *x, int w) {
+    // recebe o nó da árvore, a palavra "x" e a posição w do bit
+
+    // Se nós voltarmos na árvore, encontramos a chave
+    if(arvore->bit <= w){
         return arvore;
-    if (bit(x, arvore->bit) == 0)
+    }
+
+
+    if (bit(x, arvore->bit) == 0){
+        // Se o bit nessa posição for 0, vamos avançar para a subárvore da ESQUERDA (BIT 0);
         return busca_rec(arvore->esq, x, arvore->bit);
-    else
+    }else{
+        // Se o bit nessa posição for 0, vamos avançar para a subárvore da DIREITA (BIT 1);
         return busca_rec(arvore->dir, x, arvore->bit);
+    }
 }
 
-// Função de busca pública
-No *busca(No *arvore, const char *x) {
+// Função de busca - passamos a árvore como um todo e o que estamos buscando.
+NOPATRICIA *busca(NOPATRICIA *arvore, const char *x) {
+
+    // (não entendi)
     if (arvore == NULL) {
-        printf("Erro: Ponteiro da árvore é NULL em busca()\n");
+        printf("Erro: Ponteiro da arvore é NULL em busca()\n");
         return NULL;
     }
     if (arvore->chave == NULL) {
-        printf("Chave da árvore é NULL durante busca().\n");
+        printf("Chave da arvore é NULL durante busca().\n");
         return NULL;  // Se a chave no nó atual for NULL, não encontramos a chave
     }
     
-    No *t = busca_rec(arvore->esq, x, -1);
+    //atribuimos a um novo nó "t" que vai nos auxiliar a fazer a busca.
+    NOPATRICIA *t = busca_rec(arvore->esq, x, -1); // passamos a posição -1 porque começamos do dummy e vamos descendo
+
+    // aqui, o "t" vai ter recebido o resultado da busca, então "perguntamos" se ele encontrou o char ou não
+
+    // Se a chave dentro do nó for diferente de nulo (não encontrou) e o char que está sendo passado como parâmetro da função busca for 0, retornamos a árvore.
     return (t->chave != NULL && strcmp(t->chave, x) == 0) ? t : NULL;
 }
 
-// Função de inserção recursiva
-No *insere_rec(No *arvore, const char *chave, int w, No *pai) {
-    No *novo;
-    if ((arvore->bit >= w) || (arvore->bit <= pai->bit)) {
-        novo = malloc(sizeof(No));
+// Função de inserção recursiva - passa a árvore, a nova chave a ser adicionada, a posição que vai ser discriminada "w" e o pai desse nó
+NOPATRICIA *insere_rec(NOPATRICIA *arvore, const char *chave, int w, NOPATRICIA *pai){
+
+    // vamos alocar memória para um novo nó
+    NOPATRICIA *novo;
+
+    if((arvore->bit >= w) || (arvore->bit <= pai->bit)){
+        novo = malloc(sizeof(NOPATRICIA));
         if (novo == NULL) {
             printf("Falha ao alocar memória para o novo nó.\n");
             exit(1);
@@ -89,21 +114,24 @@ No *insere_rec(No *arvore, const char *chave, int w, No *pai) {
 }
 
 // Função de inserção pública
-void insere(No **arvore, const char *chave) {
+void insere(NOPATRICIA **arvore, const char *chave) {
     if (*arvore == NULL) {
         printf("Erro: Ponteiro da árvore é NULL em insere().\n");
         return;
     }
 
-    No *t = busca(*arvore, chave);
+    NOPATRICIA *t = busca(*arvore, chave);
     if (t == NULL) {
         int w = 0;
         printf("Buscando ponto de inserção...\n");
         
         // Verifique se a chave no nó atual é NULL antes de fazer a comparação
         if ((*arvore)->chave != NULL) {
-            while (bit(chave, w) == bit((*arvore)->chave, w))
+            while (bit(chave, w) == bit((*arvore)->chave, w)){
+                
+                printf("Teste"); // encontrado o problema
                 w++;
+            }
         }
 
         *arvore = insere_rec(*arvore, chave, w, *arvore);
@@ -113,7 +141,7 @@ void insere(No **arvore, const char *chave) {
 
 
 // Função para imprimir a árvore (em pré-ordem)
-void imprime_arvore(No *arvore) {
+void imprime_arvore(NOPATRICIA *arvore) {
     if (arvore != NULL && arvore->chave != NULL) {
         printf("Chave: %s, Bit: %d\n", arvore->chave, arvore->bit);
         if (arvore->esq != arvore)
@@ -124,7 +152,7 @@ void imprime_arvore(No *arvore) {
 }
 
 int main() {
-    No *arvore;
+    NOPATRICIA *arvore;
     inicializa(&arvore);
 
     int opcao;
