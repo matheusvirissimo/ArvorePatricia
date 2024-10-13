@@ -163,6 +163,84 @@ void insere(NOPATRICIA **arvore, const char *chave) {
     printf("Chave %s inserida na árvore.\n", chave);
 }
 
+// Função de remoção
+NOPATRICIA *remove_patricia_rec(NOPATRICIA *arvore, const char *chaveRemovida, NOPATRICIA *pai){
+    if (arvore == NULL) {
+        // Se a árvore estiver vazia ou não existir, retorna NULL (nada a remover)
+        return NULL;
+    }
+
+    // 1° caso: o nó é folha
+    if(arvore->esq == arvore && arvore->dir == arvore){ // se ele aponta para ele mesmo tanto na esquerda quanto na direita
+        if (strcmp(arvore->chave, chaveRemovida) == 0) { // Verifica se a chave a ser removida é igual à chave do nó
+            free(arvore->chave);  // Libera a memória da chave
+            free(arvore);  // Libera a memória do nó
+            return NULL;  // Retorna NULL para remover a referência ao nó
+        } else {
+            return arvore;  // Se a chave não bate, não remove nada, retorna o próprio nó
+        }
+    }
+
+    // 2° caso: o nó possui a chave a ser removida
+    if (strcmp(arvore->chave, chaveRemovida) == 0) {
+        // Caso o nó tenha apenas um filho, remova-o e faça o pai apontar para o filho
+        if (arvore->esq != arvore && arvore->dir == arvore) { // Tem apenas filho à esquerda
+            NOPATRICIA *temp = arvore->esq;  // Salva o nó filho à esquerda
+            free(arvore->chave);  // Libera a memória da chave
+            free(arvore);  // Libera a memória do nó
+            return temp;  // O pai vai apontar para o filho à esquerda
+        } else if (arvore->dir != arvore && arvore->esq == arvore) { // Tem apenas filho à direita
+            NOPATRICIA *temp = arvore->dir;  // Salva o nó filho à direita
+            free(arvore->chave);  // Libera a memória da chave
+            free(arvore);  // Libera a memória do nó
+            return temp;  // O pai vai apontar para o filho à direita
+        } else {
+            // Caso o nó tenha dois filhos, substituímos pela chave do máximo descendente à esquerda
+            NOPATRICIA *descendente = arvore->esq;  // Vamos para a subárvore esquerda
+
+            // Procurando o máximo descendente à direita da subárvore esquerda
+            while (descendente->dir != descendente) {
+                descendente = descendente->dir;
+            }
+
+            // Copiando a chave do descendente para o nó atual
+            free(arvore->chave);  // Libera a chave atual
+            arvore->chave = malloc(strlen(descendente->chave) + 1);  // Realoca memória para a nova chave
+            strcpy(arvore->chave, descendente->chave);  // Copia a chave do descendente
+
+            // Remove recursivamente o descendente
+            arvore->esq = remove_patricia_rec(arvore->esq, descendente->chave, arvore);
+            return arvore;
+        }
+    }
+
+    // 3° caso: percorrendo a árvore recursivamente (nó não encontrado ainda)
+    if (bit(chaveRemovida, arvore->bit) == 0) {
+        // Se o bit na posição atual for 0, caminha para a subárvore esquerda
+        arvore->esq = remove_patricia_rec(arvore->esq, chaveRemovida, arvore);
+    } else {
+        // Caso contrário, caminha para a subárvore direita
+        arvore->dir = remove_patricia_rec(arvore->dir, chaveRemovida, arvore);
+    }
+
+    return arvore;  // Retorna a árvore com a chave removida (ou inalterada se a chave não for encontrada)
+}
+
+void remove_patricia(NOPATRICIA **arvore, const char *chaveRemovida){
+
+    // 0° precisamos saber se o nó existe
+    NOPATRICIA *t = busca(*arvore, chaveRemovida);  // Supondo que `busca` seja a função de busca correta
+
+    // O nó passado como parâmetro não existe na árvore
+    if(t == NULL){
+        printf("A chave passada nao existe dentro da arvore\n");
+        return;
+    }
+
+    // Chama a função recursiva para remover o nó encontrado
+    *arvore = remove_patricia_rec(*arvore, chaveRemovida, *arvore);  // Atualiza a árvore após a remoção
+}
+
 
 // Função para imprimir a árvore (em pré-ordem)
 // e se fizermos in-order?
@@ -191,8 +269,9 @@ int main() {
         printf("\nEscolha uma opcao:\n");
         printf("1. Inserir uma chave binaria\n");
         printf("2. Buscar uma chave binaria\n");
-        printf("3. Imprimir a arvore\n");
-        printf("4. Sair\n");
+        printf("3. Remover uma chave binaria\n");
+        printf("4. Imprimir a arvore\n");
+        printf("5. Sair\n");
         printf("Opcao: ");
         scanf("%d", &opcao);
 
@@ -215,12 +294,19 @@ int main() {
                 break;
 
             case 3:
+                printf("Digite a chave a binaria a ser removida: ");
+                scanf("%s", chave);
+                // talvez seja interessante adicionar a busca aqui na main para facilitar a lógica da função 
+                remove_patricia(&arvore, chave);
+                break;
+
+            case 4:
                 printf("Arvore Patricia:\n");
                 imprime_arvore(arvore);
                 printf("\n\n");
                 break;
 
-            case 4:
+            case 5:
                 printf("Saindo...\n");
                 return 0;
 
