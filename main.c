@@ -170,7 +170,7 @@ void insere(NOPATRICIA **arvore, const char *chave) {
 }
 
 // Função de remoção
-NOPATRICIA *remove_patricia_rec(NOPATRICIA *arvore, const char *chaveRemovida, NOPATRICIA *pai){
+NOPATRICIA *remove_patricia_rec(NOPATRICIA *arvore, const char *chaveRemovida){
     if (arvore == NULL) {
         // Se a árvore estiver vazia ou não existir, retorna NULL (nada a remover)
         return NULL;
@@ -215,7 +215,7 @@ NOPATRICIA *remove_patricia_rec(NOPATRICIA *arvore, const char *chaveRemovida, N
             strcpy(arvore->chave, descendente->chave);  // Copia a chave do descendente
 
             // Remove recursivamente o descendente
-            arvore->esq = remove_patricia_rec(arvore->esq, descendente->chave, arvore);
+            arvore->esq = remove_patricia_rec(arvore->esq, descendente->chave);
             return arvore;
         }
     }
@@ -223,10 +223,10 @@ NOPATRICIA *remove_patricia_rec(NOPATRICIA *arvore, const char *chaveRemovida, N
     // 3° caso: percorrendo a árvore recursivamente (nó não encontrado ainda)
     if (bit(chaveRemovida, arvore->bit) == 0) {
         // Se o bit na posição atual for 0, caminha para a subárvore esquerda
-        arvore->esq = remove_patricia_rec(arvore->esq, chaveRemovida, arvore);
+        arvore->esq = remove_patricia_rec(arvore->esq, chaveRemovida);
     } else {
         // Caso contrário, caminha para a subárvore direita
-        arvore->dir = remove_patricia_rec(arvore->dir, chaveRemovida, arvore);
+        arvore->dir = remove_patricia_rec(arvore->dir, chaveRemovida);
     }
 
     return arvore;  // Retorna a árvore com a chave removida (ou inalterada se a chave não for encontrada)
@@ -244,7 +244,7 @@ void remove_patricia(NOPATRICIA **arvore, const char *chaveRemovida){
     }
 
     // Chama a função recursiva para remover o nó encontrado
-    *arvore = remove_patricia_rec(*arvore, chaveRemovida, *arvore);  // Atualiza a árvore após a remoção
+    *arvore = remove_patricia_rec(*arvore, chaveRemovida);  // Atualiza a árvore após a remoção
 }
 
 
@@ -262,6 +262,20 @@ void imprime_arvore(NOPATRICIA *arvore) {
             imprime_arvore(arvore->dir);
         }
     }
+}
+
+// Remover a árvore quando se encerra o programa
+// Função para liberar a memória da árvore
+void libera_arvore(NOPATRICIA *arvore) {
+    if (arvore == NULL || arvore->chave == NULL){ // ela não existe, então não precisa remover
+        return;
+    }
+    
+    libera_arvore(arvore->esq); // faz recursivamente pros filhos a esquerda, pra não ficar vazamento de memória
+    libera_arvore(arvore->dir); // mesma coisa, só que para os filhos à direita
+
+    free(arvore->chave);
+    free(arvore);
 }
 
 int main() {
@@ -314,6 +328,7 @@ int main() {
 
             case 5:
                 printf("Saindo...\n");
+                libera_arvore(arvore); 
                 return 0;
 
             default:
