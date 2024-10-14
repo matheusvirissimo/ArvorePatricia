@@ -27,14 +27,20 @@ void inicializa(NOPATRICIA **arvore){
     printf("Arvore inicializada com sucesso.\n"); // criamos o nó dummy
 }
 
-// Função auxiliar para obter o valor de um bit em uma string binária
+// Função auxiliar para obter o valor de um bit em uma string
 int bit(const char *chave, int n){
-    if (n >= strlen(chave)) {
-        return 0;  // Se [n] ultrapassar o tamanho da string, considera 0
+    if (n < 0) return 0; // Evita acessar bits negativos
+
+    int byte_index = n / 8;
+    int bit_index = 7 - (n % 8); // Bit mais significativo primeiro
+    int chave_len_bits = strlen(chave) * 8;
+
+    if (n >= chave_len_bits) {
+        return 0; // Considera 0 se ultrapassar o tamanho
     }
 
-    // Se o bit na posição [n] da chave for 1, retorna 1, do contrário, retorna 0
-    return chave[n] == '1' ? 1 : 0; 
+    unsigned char c = chave[byte_index];
+    return (c >> bit_index) & 1;
 }
 
 // Função de busca recursiva
