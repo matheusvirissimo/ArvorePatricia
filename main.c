@@ -29,9 +29,11 @@ void inicializa(NOPATRICIA **arvore){
 
 // Função auxiliar para obter o valor de um bit em uma string
 int bit(const char *chave, int n){
-    if (n < 0) return 0; // Evita acessar bits negativos
-
-    int byte_index = n / 8;
+    if(n < 0){
+        return 0; // Evita acessar bits negativos
+    }
+    
+    int byte_index = n / 8; 
     int bit_index = 7 - (n % 8); // Bit mais significativo primeiro
     int chave_len_bits = strlen(chave) * 8;
 
@@ -40,7 +42,7 @@ int bit(const char *chave, int n){
     }
 
     unsigned char c = chave[byte_index];
-    return (c >> bit_index) & 1;
+    return (c >> bit_index) & 1; // faz 0 shift com 1 e verifica se é 0 ou 1 
 }
 
 // Função de busca recursiva
@@ -157,8 +159,7 @@ void insere(NOPATRICIA **arvore, const char *chave) {
 
             // 3°: faz uma nova busca na árvore verificando onde dividir ela
             while (bit(chave, w) == bit((*arvore)->chave, w)){
-                
-                printf("Teste"); // encontrado o problema
+
                 w++;
             }
         }
@@ -178,34 +179,34 @@ NOPATRICIA *remove_patricia_rec(NOPATRICIA *arvore, const char *chaveRemovida){
 
     // 1° caso: o nó é folha
     if(arvore->esq == arvore && arvore->dir == arvore){ // se ele aponta para ele mesmo tanto na esquerda quanto na direita
-        if (strcmp(arvore->chave, chaveRemovida) == 0) { // Verifica se a chave a ser removida é igual à chave do nó
+        if(strcmp(arvore->chave, chaveRemovida) == 0){ // Verifica se a chave a ser removida é igual à chave do nó
             free(arvore->chave);  // Libera a memória da chave
             free(arvore);  // Libera a memória do nó
             return NULL;  // Retorna NULL para remover a referência ao nó
-        } else {
+        }else{
             return arvore;  // Se a chave não bate, não remove nada, retorna o próprio nó
         }
     }
 
     // 2° caso: o nó possui a chave a ser removida
-    if (strcmp(arvore->chave, chaveRemovida) == 0) {
+    if(strcmp(arvore->chave, chaveRemovida) == 0){
         // Caso o nó tenha apenas um filho, remova-o e faça o pai apontar para o filho
-        if (arvore->esq != arvore && arvore->dir == arvore) { // Tem apenas filho à esquerda
+        if(arvore->esq != arvore && arvore->dir == arvore){ // Tem apenas filho à esquerda
             NOPATRICIA *temp = arvore->esq;  // Salva o nó filho à esquerda
             free(arvore->chave);  // Libera a memória da chave
             free(arvore);  // Libera a memória do nó
             return temp;  // O pai vai apontar para o filho à esquerda
-        } else if (arvore->dir != arvore && arvore->esq == arvore) { // Tem apenas filho à direita
+        }else if(arvore->dir != arvore && arvore->esq == arvore){ // Tem apenas filho à direita
             NOPATRICIA *temp = arvore->dir;  // Salva o nó filho à direita
             free(arvore->chave);  // Libera a memória da chave
             free(arvore);  // Libera a memória do nó
             return temp;  // O pai vai apontar para o filho à direita
-        } else {
+        }else{
             // Caso o nó tenha dois filhos, substituímos pela chave do máximo descendente à esquerda
             NOPATRICIA *descendente = arvore->esq;  // Vamos para a subárvore esquerda
 
             // Procurando o máximo descendente à direita da subárvore esquerda
-            while (descendente->dir != descendente) {
+            while(descendente->dir != descendente){
                 descendente = descendente->dir;
             }
 
@@ -221,10 +222,10 @@ NOPATRICIA *remove_patricia_rec(NOPATRICIA *arvore, const char *chaveRemovida){
     }
 
     // 3° caso: percorrendo a árvore recursivamente (nó não encontrado ainda)
-    if (bit(chaveRemovida, arvore->bit) == 0) {
+    if(bit(chaveRemovida, arvore->bit) == 0){
         // Se o bit na posição atual for 0, caminha para a subárvore esquerda
         arvore->esq = remove_patricia_rec(arvore->esq, chaveRemovida);
-    } else {
+    }else{
         // Caso contrário, caminha para a subárvore direita
         arvore->dir = remove_patricia_rec(arvore->dir, chaveRemovida);
     }
